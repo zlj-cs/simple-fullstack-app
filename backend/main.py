@@ -86,9 +86,21 @@ def add_money(request: MoneyRequest):
 
 
 # 挂载前端静态文件（部署时使用）
-# 检查 frontend 目录是否存在
-frontend_path = os.path.join(os.path.dirname(__file__), '..', 'frontend')
-if os.path.exists(frontend_path):
+# 尝试多个可能的路径
+possible_paths = [
+    os.path.join(os.path.dirname(__file__), '..', 'frontend'),  # 本地开发
+    os.path.join(os.path.dirname(__file__), '..', '..', 'frontend'),  # Docker
+    '/app/frontend',  # Docker 绝对路径
+    'frontend',  # 相对路径
+]
+
+frontend_path = None
+for path in possible_paths:
+    if os.path.exists(path):
+        frontend_path = path
+        break
+
+if frontend_path:
     # 部署模式：后端托管前端
     app.mount("/static", StaticFiles(directory=frontend_path), name="static")
     
@@ -96,9 +108,11 @@ if os.path.exists(frontend_path):
     async def serve_frontend():
         return FileResponse(os.path.join(frontend_path, 'index.html'))
     
-    print("✅ 前后端一起部署模式")
+    print(f"✅ 前后端一起部署模式，frontend 路径: {frontend_path}")
 else:
     print("⚠️ 仅后端部署模式（frontend 目录不存在）")
+    print(f"当前目录: {os.getcwd()}")
+    print(f"尝试过的路径: {possible_paths}")
 
 if __name__ == "__main__":
     import uvicorn
