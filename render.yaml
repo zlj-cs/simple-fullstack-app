@@ -1,0 +1,14 @@
+# Render 部署配置文件
+# 免费版：15分钟休眠，30秒冷启动
+
+services:
+  # 后端服务
+  - type: web
+    name: simple-fullstack-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0

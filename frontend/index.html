@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单全栈示例</title>
+    <style>
+        /* 简单样式 */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        input[type="text"] {
+            width: 200px;
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 8px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            min-height: 30px;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        /* 加载动画样式 */
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #007bff;
+        }
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e0e0e0;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 简单全栈示例</h1>
+        <p style="text-align: center; color: #666;">
+            前端 (HTML+JS) ↔ 后端 (FastAPI) ↔ 数据 (JSON)
+        </p>
+
+        <!-- 功能 1：测试连接 -->
+        <div class="section">
+            <h3>1. 测试后端连接</h3>
+            <button onclick="testConnection()">测试连接</button>
+            <div id="connection-result" class="result">点击按钮测试...</div>
+        </div>
+
+        <!-- 功能 2：发送名字 -->
+        <div class="section">
+            <h3>2. 发送名字到后端</h3>
+            <p>输入你的名字，后端会返回问候语：</p>
+            <input type="text" id="name-input" placeholder="输入名字">
+            <button onclick="sendName()">发送</button>
+            <div id="greeting-result" class="result">等待输入...</div>
+        </div>
+
+        <!-- 功能 3：获取时间 -->
+        <div class="section">
+            <h3>3. 获取服务器时间</h3>
+            <button onclick="getTime()">获取时间</button>
+            <div id="time-result" class="result">点击获取...</div>
+        </div>
+
+        <!-- 功能 4：查询余额 -->
+        <div class="section">
+            <h3>4. 查询余额</h3>
+            <button onclick="getBalance()">查询余额</button>
+            <div id="balance-result" class="result">点击查询...</div>
+        </div>
+
+        <!-- 功能 5：POST 充值（安全演示）-->
+        <div class="section" style="background-color: #e8f5e9; border-color: #4caf50;">
+            <h3>✅ 5. POST 充值（安全示例）</h3>
+            <p style="color: #2e7d32;">用 <strong>POST</strong> 修改数据是安全的！</p>
+            <input type="number" id="amount-input" placeholder="输入金额" value="100">
+            <button onclick="addMoney()" style="background-color: #4caf50;">充值（POST）</button>
+            <div id="add-money-result" class="result">当前余额：100</div>
+        </div>
+
+        <!-- 攻击演示 -->
+        <div class="section" style="background-color: #fff3e0; border-color: #ff9800;">
+            <h3>🎭 攻击演示（现在会失败）</h3>
+            <p>恶意网站尝试用 &lt;img&gt; 攻击，但<strong>POST 接口不会被触发</strong>：</p>
+            <code>&lt;img src="http://localhost:8000/add-money?amount=99999" width="0"&gt;</code>
+            <p style="margin-top: 10px;">
+                <button onclick="simulateAttack()" style="background-color: #ff9800;">模拟攻击（会失败）</button>
+            </p>
+            <div id="attack-result" class="result">点击按钮测试攻击失败...</div>
+        </div>
+
+        <!-- 说明 -->
+        <div class="section" style="background-color: #fff3cd;">
+            <h3>📋 代码说明</h3>
+            <p><strong>前端代码：</strong></p>
+            <code>fetch('http://localhost:8000/greet', {...})</code>
+            <p style="margin-top: 10px;"><strong>后端代码：</strong></p>
+            <code>@app.post("/greet")</code>
+            <p style="margin-top: 10px; color: #666;">
+                这就是前后端交互的核心：前端用 fetch 发请求，后端用接口接收处理
+            </p>
+            <p style="margin-top: 10px; color: #d32f2f;">
+                <strong>重要：</strong>GET 只应该用于读取数据！写数据必须用 POST！
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // 后端地址（本地开发用 localhost，部署后用相对路径）
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000'  // 本地开发
+            : '';  // 部署后使用相对路径（同域名）
+
+        // 功能 1：测试连接
+        async function testConnection() {
+            const resultDiv = document.getElementById('connection-result');
+            // 显示加载动画
+            resultDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span>🤖 大模型识别中...</span>
+                </div>
+            `;
+            
+            try {
+                // 等待1秒（仅用于测试，让用户看清加载状态）
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // 发送 GET 请求到后端
+                const response = await fetch(`${API_URL}/`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<span class="success">✅ ${data.message}</span>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ 连接失败：${error.message}<br>请确保后端已启动</span>`;
+            }
+        }
+
+        // 功能 2：发送名字
+        async function sendName() {
+            const nameInput = document.getElementById('name-input');
+            const resultDiv = document.getElementById('greeting-result');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                resultDiv.innerHTML = '<span class="error">请先输入名字</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '发送中...';
+            
+            try {
+                // 发送 GET 请求到后端（参数放 URL）
+                const response = await fetch(`${API_URL}/greet?name=${encodeURIComponent(name)}`);
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `<span class="success">✅ ${data.message}</span>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ 发送失败：${error.message}</span>`;
+            }
+        }
+
+        // 功能 3：获取时间
+        async function getTime() {
+            const resultDiv = document.getElementById('time-result');
+            resultDiv.innerHTML = '获取中...';
+            
+            try {
+                const response = await fetch(`${API_URL}/time`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<span class="success">🕐 服务器时间：${data.current_time}</span>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ 获取失败：${error.message}</span>`;
+            }
+        }
+
+        // 功能 4：查询余额
+        async function getBalance() {
+            const resultDiv = document.getElementById('balance-result');
+            resultDiv.innerHTML = '查询中...';
+            
+            try {
+                const response = await fetch(`${API_URL}/balance`);
+                
+                // 检查响应是否成功
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('余额数据：', data);  // 调试信息
+                
+                if (data.balance === undefined) {
+                    throw new Error('返回数据格式错误：' + JSON.stringify(data));
+                }
+                
+                resultDiv.innerHTML = `<span class="success">💰 当前余额：${data.balance}</span>`;
+                // 同步更新充值区域的显示
+                document.getElementById('add-money-result').innerHTML = `当前余额：${data.balance}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ 查询失败：${error.message}</span>`;
+                console.error('查询余额错误：', error);
+            }
+        }
+
+        // 功能 5：POST 充值（安全）
+        async function addMoney() {
+            const amountInput = document.getElementById('amount-input');
+            const resultDiv = document.getElementById('add-money-result');
+            const amount = parseInt(amountInput.value);
+            
+            if (!amount || amount <= 0) {
+                resultDiv.innerHTML = '<span class="error">请输入有效金额</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '充值中...';
+            
+            try {
+                // ✅ 安全：用 POST 修改数据
+                const response = await fetch(`${API_URL}/add-money`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ amount: amount })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `<span class="success">${data.message}</span>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ 充值失败：${error.message}</span>`;
+            }
+        }
+
+        // 模拟攻击：用 img 标签尝试触发 GET 请求（会失败）
+        async function simulateAttack() {
+            const resultDiv = document.getElementById('attack-result');
+            const balanceBefore = user_balance;  // 记录攻击前余额
+            
+            resultDiv.innerHTML = '尝试攻击中... <img src="http://localhost:8000/add-money?amount=99999" width="0" height="0" style="display:none;">';
+            
+            // 等待一段时间
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // 查询余额看攻击是否成功
+            try {
+                const response = await fetch(`${API_URL}/balance`);
+                const data = await response.json();
+                
+                if (data.balance === balanceBefore || data.balance < 100000) {
+                    // 攻击失败！
+                    resultDiv.innerHTML = `
+                        <span class="success">
+                            ✅ 攻击失败！余额仍然是：${data.balance}<br>
+                            因为接口是 POST，&lt;img&gt; 标签无法触发！
+                        </span>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <span class="error">
+                            ⚠️ 攻击成功！余额变成：${data.balance}
+                        </span>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">检测失败：${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html>
