@@ -4,7 +4,10 @@
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
+import os
 
 # 创建应用
 app = FastAPI(title="简单全栈示例")
@@ -33,13 +36,13 @@ user_balance = 100
 
 
 # 接口 1：GET 请求，测试用
-@app.get("/")
+@app.get("/api/")
 def home():
     return {"message": "后端运行正常！", "status": "ok"}
 
 
 # 接口 2：GET 请求，接收名字返回问候
-@app.get("/greet", response_model=GreetingResponse)
+@app.get("/api/greet", response_model=GreetingResponse)
 def greet(name: str):
     """
     接收一个名字，返回问候语
@@ -52,7 +55,7 @@ def greet(name: str):
 
 
 # 接口 3：GET 请求，获取当前时间
-@app.get("/time")
+@app.get("/api/time")
 def get_time():
     from datetime import datetime
     return {
@@ -62,7 +65,7 @@ def get_time():
 
 
 # 接口 4：GET 请求，查询余额（安全）
-@app.get("/balance")
+@app.get("/api/balance")
 def get_balance():
     return {"balance": user_balance}
 
@@ -71,7 +74,7 @@ def get_balance():
 class MoneyRequest(BaseModel):
     amount: int
 
-@app.post("/add-money")
+@app.post("/api/add-money")
 def add_money(request: MoneyRequest):
     """
     ✅ 安全示例：用 POST 修改数据
@@ -82,9 +85,24 @@ def add_money(request: MoneyRequest):
     return {"message": f"充值成功！余额：{user_balance}", "balance": user_balance}
 
 
+# 挂载前端静态文件（部署时使用）
+# 检查 frontend 目录是否存在
+frontend_path = os.path.join(os.path.dirname(__file__), '..', 'frontend')
+if os.path.exists(frontend_path):
+    # 部署模式：后端托管前端
+    app.mount("/static", StaticFiles(directory=frontend_path), name="static")
+    
+    @app.get("/")
+    async def serve_frontend():
+        return FileResponse(os.path.join(frontend_path, 'index.html'))
+    
+    print("✅ 前后端一起部署模式")
+else:
+    print("⚠️ 仅后端部署模式（frontend 目录不存在）")
+
 if __name__ == "__main__":
     import uvicorn
-    print("启动后端服务器...")
+    print("启动服务器...")
     print("访问地址：http://localhost:8000")
     print("API 文档：http://localhost:8000/docs")
     uvicorn.run(app, host="0.0.0.0", port=8000)
